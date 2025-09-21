@@ -8,8 +8,12 @@ import { JavaScriptPuzzle } from './components/challenges/JavaScriptPuzzle';
 import { SQLChallenge } from './components/challenges/SQLChallenge';
 import { WebDevQuest } from './components/challenges/WebDevQuest';
 import { Onboarding } from './components/auth/Onboarding';
-import { Dashboard } from './components/Dashboard';
+import { ModernDashboard } from './components/ModernDashboard';
 import { QuizComponent } from './components/challenges/quiz/QuizComponent';
+import { LearningHub } from './components/LearningHub';
+import { Opportunities } from './components/Opportunities';
+import { Community } from './components/Community';
+import { Profile } from './components/Profile';
 import { cQuiz } from './data/quizzes/cQuiz';
 import { cppQuiz } from './data/quizzes/cppQuiz';
 import { pythonQuiz } from './data/quizzes/pythonQuiz';
@@ -20,7 +24,7 @@ export function App() {
   const [currentChallenge, setCurrentChallenge] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [currentView, setCurrentView] = useState<'dashboard' | 'modules' | 'chat'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'modules' | 'chat' | 'learning' | 'opportunities' | 'community' | 'profile'>('dashboard');
 
   if (!isLoggedIn) {
     return <Onboarding onComplete={(profile: UserProfile) => {
@@ -45,20 +49,46 @@ export function App() {
   switch (currentView) {
     case 'dashboard':
       return (
-        <div className="min-h-screen bg-gray-50">
-          <Header 
-            onLogout={() => setIsLoggedIn(false)}
-            onNavigate={setCurrentView}
-            currentView="dashboard"
-            showBackButton={false}
-          />
-          <Dashboard
-            userProfile={userProfile}
-            onNavigateToChat={() => setCurrentView('chat')}
-            onNavigateToModules={() => setCurrentView('modules')}
-          />
-          <ChatBot userProfile={userProfile} onLaunchChallenge={setCurrentChallenge} />
-        </div>
+        <ModernDashboard
+          userProfile={userProfile}
+          onNavigate={(view: string) => setCurrentView(view as 'dashboard' | 'modules' | 'chat' | 'learning' | 'opportunities' | 'community' | 'profile')}
+        />
+      );
+    case 'learning':
+      return (
+        <LearningHub
+          currentView={currentView}
+          onNavigate={(view) => setCurrentView(view as 'dashboard' | 'modules' | 'chat' | 'learning' | 'opportunities' | 'community' | 'profile')}
+          onLogout={() => setIsLoggedIn(false)}
+          userName={userProfile.name}
+        />
+      );
+    case 'opportunities':
+      return (
+        <Opportunities
+          currentView={currentView}
+          onNavigate={(view) => setCurrentView(view as 'dashboard' | 'modules' | 'chat' | 'learning' | 'opportunities' | 'community' | 'profile')}
+          onLogout={() => setIsLoggedIn(false)}
+          userName={userProfile.name}
+        />
+      );
+    case 'community':
+      return (
+        <Community
+          currentView={currentView}
+          onNavigate={(view) => setCurrentView(view as 'dashboard' | 'modules' | 'chat' | 'learning' | 'opportunities' | 'community' | 'profile')}
+          onLogout={() => setIsLoggedIn(false)}
+          userName={userProfile.name}
+        />
+      );
+    case 'profile':
+      return (
+        <Profile
+          currentView={currentView}
+          onNavigate={(view) => setCurrentView(view as 'dashboard' | 'modules' | 'chat' | 'learning' | 'opportunities' | 'community' | 'profile')}
+          onLogout={() => setIsLoggedIn(false)}
+          userName={userProfile.name}
+        />
       );
     case 'modules':
       return (
@@ -66,7 +96,7 @@ export function App() {
           <Header 
             onBack={() => setCurrentView('dashboard')} 
             onLogout={() => setIsLoggedIn(false)}
-            onNavigate={setCurrentView}
+            onNavigate={(view) => setCurrentView(view as 'dashboard' | 'modules' | 'chat' | 'learning' | 'opportunities' | 'community' | 'profile')}
             currentView="modules"
             showBackButton={false}
           />
@@ -82,7 +112,7 @@ export function App() {
           <Header 
             onBack={() => setCurrentView('dashboard')} 
             onLogout={() => setIsLoggedIn(false)}
-            onNavigate={setCurrentView}
+            onNavigate={(view) => setCurrentView(view as 'dashboard' | 'modules' | 'chat' | 'learning' | 'opportunities' | 'community' | 'profile')}
             currentView="chat"
             showBackButton={false}
           />
@@ -103,10 +133,9 @@ export function App() {
       );
     default:
       return (
-        <Dashboard
+        <ModernDashboard
           userProfile={userProfile}
-          onNavigateToChat={() => setCurrentView('chat')}
-          onNavigateToModules={() => setCurrentView('modules')}
+          onNavigate={(view: string) => setCurrentView(view as 'dashboard' | 'modules' | 'chat' | 'learning' | 'opportunities' | 'community' | 'profile')}
         />
       );
   }

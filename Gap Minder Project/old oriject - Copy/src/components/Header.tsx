@@ -1,4 +1,4 @@
-import { Code2, Trophy, User, LogOut, ArrowLeft, Home, BookOpen, MessageSquare } from 'lucide-react';
+import { Code2, User, LogOut, ArrowLeft, Home, BookOpen, MessageSquare } from 'lucide-react';
 
 interface HeaderProps {
   onBack?: () => void;

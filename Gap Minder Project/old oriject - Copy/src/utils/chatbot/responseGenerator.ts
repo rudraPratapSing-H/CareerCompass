@@ -1,7 +1,13 @@
 import { codeExamples } from './codeExamples';
 import type { UserProfile } from '../../types';
 
-export function generateResponse(input: string, userProfile: UserProfile | null): string {
+// Google API Configuration
+const GOOGLE_API_KEY = 'AIzaSyB2tCiwdr83papZ3AG4W_WVGIaN989rMSo';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+const YOUTUBE_API_URL = 'https://www.googleapis.com/youtube/v3/search';
+
+// Enhanced response generation with Google APIs
+export async function generateResponse(input: string, userProfile: UserProfile | null): Promise<string> {
   const normalizedInput = input.toLowerCase();
 
   // Personalized greeting based on user profile
@@ -9,7 +15,7 @@ export function generateResponse(input: string, userProfile: UserProfile | null)
     if (userProfile) {
       return `Hello! I see you're interested in ${userProfile.desiredSkills.join(', ')} and want to become a ${userProfile.desiredRole}. I'm here to help you learn and access our modules. What would you like to do today?`;
     }
-    return 'Hi! I\'m your coding assistant. How can I help you today?';
+    return 'Hi! I\'m your AI coding assistant powered by Google Gemini. How can I help you today?';
   }
 
   // Access modules
@@ -17,7 +23,7 @@ export function generateResponse(input: string, userProfile: UserProfile | null)
     if (userProfile) {
       const skills = userProfile.desiredSkills;
       let response = `Based on your skills (${skills.join(', ')}), here are some modules you can access:\n\n`;
-      
+
       if (skills.some(skill => ['JavaScript', 'React', 'Node.js'].includes(skill))) {
         response += '• JavaScript Puzzle\n• Web Development Quest\n';
       }
@@ -33,7 +39,7 @@ export function generateResponse(input: string, userProfile: UserProfile | null)
       if (skills.includes('C++')) {
         response += '• C++ Quiz\n';
       }
-      
+
       response += '\nType the module name to start it!';
       return response;
     }
@@ -60,32 +66,31 @@ export function generateResponse(input: string, userProfile: UserProfile | null)
     return 'LAUNCH_CHALLENGE:cpp Starting C++ Quiz...';
   }
 
-  // Video recommendations
+  // Enhanced video recommendations using YouTube API
   if (normalizedInput.includes('video') || normalizedInput.includes('tutorial') || normalizedInput.includes('learn')) {
     if (userProfile) {
-      const skills = userProfile.desiredSkills;
-      let response = `Here are some video recommendations for your skills:\n\n`;
-      
-      skills.forEach(skill => {
-        switch(skill) {
-          case 'JavaScript':
-            response += `• JavaScript: https://www.youtube.com/watch?v=W6NZfCO5SIk\n`;
-            break;
-          case 'React':
-            response += `• React: https://www.youtube.com/watch?v=w7ejDZ8SWv8\n`;
-            break;
-          case 'Python':
-            response += `• Python: https://www.youtube.com/watch?v=rfscVS0vtbw\n`;
-            break;
-          case 'SQL':
-            response += `• SQL: https://www.youtube.com/watch?v=HXV3zeQKqGY\n`;
-            break;
-          default:
-            response += `• ${skill}: Search for "${skill} tutorial" on YouTube\n`;
-        }
-      });
-      
-      return response;
+      try {
+        const skills = userProfile.desiredSkills;
+        const videoPromises = skills.slice(0, 3).map(skill => searchYouTubeVideos(skill));
+        const videoResults = await Promise.all(videoPromises);
+
+        let response = `🎥 Here are personalized video recommendations for your skills:\n\n`;
+
+        videoResults.forEach((videos, index) => {
+          const skill = skills[index];
+          response += `📚 **${skill} Tutorials:**\n`;
+          videos.slice(0, 2).forEach(video => {
+            response += `• ${video.title}\n  👁️ ${video.viewCount} views | ⏱️ ${video.duration}\n  🔗 ${video.url}\n\n`;
+          });
+        });
+
+        response += `💡 Tip: Watch these videos and practice what you learn in our interactive modules!`;
+        return response;
+      } catch (error) {
+        console.error('YouTube API error:', error);
+        // Fallback to static recommendations
+        return getStaticVideoRecommendations(userProfile);
+      }
     }
     return 'Please complete your skills assessment to get personalized video recommendations.';
   }
@@ -127,10 +132,108 @@ export function generateResponse(input: string, userProfile: UserProfile | null)
 5. Break down the problem into smaller parts`;
   }
 
-  return 'I can help you with coding! Ask me about specific programming concepts, examples, or debugging tips. You can also ask for modules or video recommendations based on your skills.';
+  // For complex queries, use Google Gemini AI
+  try {
+    const geminiResponse = await queryGeminiAI(input, userProfile);
+    return geminiResponse;
+  } catch (error) {
+    console.error('Gemini API error:', error);
+    return 'I can help you with coding! Ask me about specific programming concepts, examples, or debugging tips. You can also ask for modules or video recommendations based on your skills.';
+  }
+}
+
+// YouTube API integration
+async function searchYouTubeVideos(skill: string): Promise<Array<{title: string, url: string, viewCount: string, duration: string}>> {
+  try {
+    const response = await fetch(
+      `${YOUTUBE_API_URL}?part=snippet&q=${encodeURIComponent(skill + ' tutorial beginners')}&type=video&maxResults=3&key=${GOOGLE_API_KEY}`
+    );
+
+    if (!response.ok) {
+      throw new Error('YouTube API request failed');
+    }
+
+    const data = await response.json();
+
+    return data.items.map((item: any) => ({
+      title: item.snippet.title,
+      url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
+      viewCount: 'N/A', // Would need additional API call for view count
+      duration: 'N/A'   // Would need additional API call for duration
+    }));
+  } catch (error) {
+    console.error('YouTube search error:', error);
+    return [];
+  }
+}
+
+// Google Gemini AI integration
+async function queryGeminiAI(input: string, userProfile: UserProfile | null): Promise<string> {
+  try {
+    const context = userProfile
+      ? `You are a helpful coding assistant for a career guidance platform. The user is learning ${userProfile.desiredSkills.join(', ')} and wants to become a ${userProfile.desiredRole}. Provide helpful, educational responses about programming and career development.`
+      : 'You are a helpful coding assistant for a career guidance platform. Provide educational responses about programming and career development.';
+
+    const response = await fetch(`${GEMINI_API_URL}?key=${GOOGLE_API_KEY}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: `${context}\n\nUser question: ${input}\n\nProvide a helpful, educational response. Keep it concise but informative.`
+          }]
+        }]
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Gemini API request failed');
+    }
+
+    const data = await response.json();
+    const generatedText = data.candidates[0]?.content?.parts[0]?.text;
+
+    if (generatedText) {
+      return generatedText.trim();
+    } else {
+      throw new Error('No response generated');
+    }
+  } catch (error) {
+    console.error('Gemini API error:', error);
+    throw error;
+  }
+}
+
+// Fallback static video recommendations
+function getStaticVideoRecommendations(userProfile: UserProfile): string {
+  const skills = userProfile.desiredSkills;
+  let response = `Here are some video recommendations for your skills:\n\n`;
+
+  skills.forEach(skill => {
+    switch(skill) {
+      case 'JavaScript':
+        response += `• JavaScript: https://www.youtube.com/watch?v=W6NZfCO5SIk\n`;
+        break;
+      case 'React':
+        response += `• React: https://www.youtube.com/watch?v=w7ejDZ8SWv8\n`;
+        break;
+      case 'Python':
+        response += `• Python: https://www.youtube.com/watch?v=rfscVS0vtbw\n`;
+        break;
+      case 'SQL':
+        response += `• SQL: https://www.youtube.com/watch?v=HXV3zeQKqGY\n`;
+        break;
+      default:
+        response += `• ${skill}: Search for "${skill} tutorial" on YouTube\n`;
+    }
+  });
+
+  return response;
 }
 
 // This is the main processMessage function that the chatbot uses
 export function processMessage(message: string, userProfile: UserProfile | null): Promise<string> {
-  return Promise.resolve(generateResponse(message, userProfile));
+  return generateResponse(message, userProfile);
 }

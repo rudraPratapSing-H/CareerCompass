@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { BookOpen, Clock, Play, FileText, CheckCircle, ChevronLeft, ChevronRight, Plus, X } from 'lucide-react';
 
 const learningPreferences = [
