@@ -4,6 +4,7 @@ import { Hero } from './components/Hero';
 import { GameGrid } from './components/GameGrid';
 import { Leaderboard } from './components/Leaderboard';
 import { ChatBot } from './components/ChatBot';
+import { ChatInterface } from './components/ChatInterface';
 import { JavaScriptPuzzle } from './components/challenges/JavaScriptPuzzle';
 import { SQLChallenge } from './components/challenges/SQLChallenge';
 import { WebDevQuest } from './components/challenges/WebDevQuest';
@@ -108,28 +109,11 @@ export function App() {
       );
     case 'chat':
       return (
-        <div className="min-h-screen bg-gray-50">
-          <Header 
-            onBack={() => setCurrentView('dashboard')} 
-            onLogout={() => setIsLoggedIn(false)}
-            onNavigate={(view) => setCurrentView(view as 'dashboard' | 'modules' | 'chat' | 'learning' | 'opportunities' | 'community' | 'profile')}
-            currentView="chat"
-            showBackButton={false}
-          />
-          <div className="flex items-center justify-center min-h-[80vh]">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">AI Mentor Chat</h2>
-              <p className="text-gray-600 mb-8">Your personalized AI assistant is ready to help!</p>
-              <button
-                onClick={() => setCurrentView('dashboard')}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Back to Dashboard
-              </button>
-            </div>
-          </div>
-          <ChatBot userProfile={userProfile} onLaunchChallenge={setCurrentChallenge} />
-        </div>
+        <ChatInterface
+          userProfile={userProfile}
+          onLaunchChallenge={setCurrentChallenge}
+          onBack={() => setCurrentView('dashboard')}
+        />
       );
     default:
       return (
