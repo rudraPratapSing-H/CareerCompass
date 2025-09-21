@@ -25,3 +25,36 @@ export interface Puzzle {
   expectedOutput: string;
 }
 
+export interface UserProfile {
+  // Basic Info
+  name: string;
+  college: string;
+  course: string;
+  year: string;
+  
+  // Skills & Interests
+  domain: string;
+  currentSkills: string[];
+  desiredSkills: string[];
+  interests: string[];
+  
+  // Career
+  desiredRole: string;
+  careerGoals: string[];
+  level: string;
+  
+  // Academic Details
+  currentSubjects: { name: string; credits: number }[];
+  timetable: { day: string; classes: { subject: string; time: string }[] }[];
+  learningPreferences: string[];
+  
+  // Learning History
+  completedTasks: string[];
+  watchedVideos: string[];
+  quizScores: { quiz: string; score: number }[];
+  
+  // Community
+  connections: string[];
+  groups: string[];
+}
+

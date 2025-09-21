@@ -1,10 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { MessageSquare, Send, HelpCircle } from 'lucide-react';
 import { processMessage } from '../utils/chatbot';
-import type { Message } from '../types'; // Correct import statement
+import type { Message } from '../types';
+import type { UserProfile } from '../types';
 
-
-export function ChatBot() {
+export function ChatBot({ userProfile, onLaunchChallenge }: { 
+  userProfile: UserProfile | null;
+  onLaunchChallenge: (challenge: string) => void;
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     { id: '1', type: 'bot', content: 'Hi! I\'m your coding assistant. How can I help you today?' }
@@ -35,13 +38,28 @@ export function ChatBot() {
     setIsTyping(true);
 
     try {
-      const response = await processMessage(input);
-      const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        type: 'bot',
-        content: response
-      };
-      setMessages(prev => [...prev, botMessage]);
+      const response = await processMessage(input, userProfile);
+      
+      // Check for special commands
+      if (response.startsWith('LAUNCH_CHALLENGE:')) {
+        const challenge = response.split(':')[1].split(' ')[0];
+        onLaunchChallenge(challenge);
+        // Extract the message part
+        const message = response.split(' ').slice(1).join(' ');
+        const botMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          type: 'bot',
+          content: message
+        };
+        setMessages(prev => [...prev, botMessage]);
+      } else {
+        const botMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          type: 'bot',
+          content: response
+        };
+        setMessages(prev => [...prev, botMessage]);
+      }
     } catch (error) {
       console.error('Error processing message:', error);
       const errorMessage: Message = {
